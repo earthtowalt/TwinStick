@@ -3,39 +3,14 @@
 # https://github.com/Mekire/pygame-samples/blob/master/tank_turret/turret_gamepad.py
 
 import pygame
+import os
+import math
+import sys
 
-deadzone = 0.1
-
-pygame.init()
-# setup joysticks
-
-# setup joystick controller.
-control = None
-while not control:
-	pygame.joystick.init()
-	print(pygame.joystick.get_count())
-	if pygame.joystick.get_count() > 0:
-		control = pygame.joystick.Joystick(0)
-	else:
-		print("no controller found")
-		pygame.joystick.quit()
-	pygame.time.wait(2000)
-	
-control.init()
-print(control)
-
-# setup window
-screen = pygame.display.set_mode((1200, 800))
-
-# setup clock
-clock = pygame.time.Clock()
-
-# setup character
-x = 30
-y = 30
-direction = 0
-color = (0, 128, 255)
-speed = 5
+CAPTION = "TWIN STICK" 
+SCREEN_SIZE = (800, 600)
+BACKGROUND_COLOR = (50,50,50)
+COLOR_KEY = (255, 0, 255) 
 
 # character class
 class Gunner(object):
@@ -55,24 +30,33 @@ class Gunner(object):
 		self.feet = self.original_feet.copy()
 		self.gunner_rect = self.gunner.get_rect(center=location)
 		self.feet_rect = self.rect.copy()
-		self.angle=0
+		self.gunner_angle=0
+		self.feet_angle=0
 		
 	def get_angle(self, stick, deadzone=0.1):
-		''' get the current angle of the passed stick'''
-		if stick == 'left':
-			x,y = self.controller.get_axis(0), self.controller.get_axis(1)
-		elif stick == 'right':
-			x,y = self.controller.get_axis(3), -1 * self.controller.get_axis(4)
+		'''get the current angle of the passed stick and set the according sprites.'''
+	
+		leftx,lefty = self.controller.get_axis(0), self.controller.get_axis(1)
+		rightx,righty = self.controller.get_axis(3), -self.controller.get_axis(4)
 		
-		if abs(x) > deadzone or abs(y) > deadzone:
-			if (x == 0.0): x += 0.0001
-			# arctan(y/x)
-			self.angle += 5 #FIXME: actually get angle
-			self.barrel = pygame.transform.rotate(self.original_barrel, self.angle)
-			self.barrel_rect = self.barrel.get_rect(center=self.rect.center)
+		if abs(leftx) > deadzone or abs(lefty) > deadzone:
+			if leftx == 0.0: x += 0.0001
+			# self.angle = arctan(y/x)
+			self.feet_angle += 5 #FIXME: actually get angle
+			self.feet = pygame.transform.rotate(self.original_feet, self.feet_angle)
+			self.feet_rect = self.feet.get_rect(center=self.feet_rect.center)
+		
+		if abs(rightx) > deadzone or abs(righty) > deadzone:
+			if rightx == 0.0: x += 0.0001
+			# self.gunner_angle = arctan(y/x)
+			self.gunner_angle += 5 # FIXME actually get angle 
+			self.gunner = pygame.transform.rotate(self.original_gunner, self.gunner_angle)
+			self.gunner_rect = self.gunner.get_rect(center=self.gunner_rect.center)
+			
+			
 		
 	def get_event(self, event, objects):
-		''' catch and process gamepad events.'''
+		'''catch and process gamepad events.'''
 		if event.type == pygame.JOYBUTTONDOWN:
 			if event.joy == self.id and event.button == 0:	# FIXME set fire button 
 				objects.add(Bullet(self.rect.center, self.angle))
@@ -106,7 +90,7 @@ class Bullet(pygame.sprite.Sprite):
 		self.done = False 
 	
 	def update(self, screen_rect):
-		''' update the bullet each frame'''
+		'''update the bullet each frame'''
 		self.pos[0] += self.velocity[0]
 		self.pos[1] += self.velocity[1]
 		self.rect.topleft = self.pos 
@@ -120,52 +104,84 @@ class Bullet(pygame.sprite.Sprite):
 class Control(object):
 	'''main control class'''
 	def __init__(self):
-		''' create a gunner and create a group for bullets '''
+		'''create a gunner and create a group for bullets '''
+		self.screen = pygame.display.get_surface()
+		self.screen_rect = self.screen.get_rect()
+		self.joys = initialize_all_gamepads()
+		self.done = False
+		self.clock = pygame.time.Clock()
+		self.fps = 30
+		self.keys = pygame.key.get_pressed()
+		self.player = Gunner(self.joys[0], screen_rect.center)# FIXME May have to replace center with (x,y)
+		self.bullets = pg.sprite.Group()
 		
+	def event_loop(self):
+		''' events are passed to appropriate object'''
+		for event in pygame.event.get():
+			self.keys = pygame.key.get_pressed()
+			if event.type == pygame.QUIT or self.keys[pygame.K_ESCAPE]:
+				self.done = True 
+			self.player.get_event(event, self.bullets)
+			
+	def update(self):
+		''' update all bullets '''
+		self.bullets.update(self.screen_rect)
+		
+	def draw(self):
+		'''draw all elements to the display surface'''
+		self.screen.fill(BACKGROUND_COLOR)
+		self.player.draw(self.screen)
+		self.bullets.draw(self.screen)
+		
+	def display_fps(self):
+		'''show the program's FPS in the window handle'''
+		caption = '{} - FPS: {:.2f}'.format(CAPTION, self.clock.get_fps())
+		pygame.display.set_caption(caption)
+		
+	def main_loop(self):
+		'''main loop'''
+		while not self.done:
+			self.event_loop()
+			self.update()
+			self.draw()
+			pygame.display_flip()
+			self.clock.tick(self.fps)
+			self.display_fps()
+			
+def initialize_all_gamepads():
+	'''checks for gamepads and returns an intialized list of them if found'''
+	joysticks = []
+	for joy_id in range(pygame.joystick.get_count()):
+		joysticks.append(pygame.joystick.Joystick(joy_id))
+		joysticks[joy_id].init()
+	return joysticks
 
-done = False 
-while not done: 
-	clock.tick(30)
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT:
-			done = True
-		print(event)
-		
 	
-	# get the left stick positions
-	axis0 = control.get_axis(0)
-	axis1 = control.get_axis(1)
+def main():
+	'''prepare display, load sprite image, and start program'''
+	global GUNNER 
+	os.environ['SDL_VIDEO_CENTERED'] = '1'
+	pygame.init()
+	pygame.display.set_caption(CAPTION)
+	pygame.display.set_mode(SCREEN_SIZE)
+	GUNNER = pygame.image.load("gunner.png").convert()
+	GUNNER.set_colorkey(COLOR_KEY)
+	Control().main_loop()
+	pygame.quit()
+	sys.exit()
+
+if __name__ == '__main__':
+	main()
 	
-	# control movement
+'''
+movement control:
+# control movement
 	if abs(axis0) > deadzone:
 		x += speed * axis0
 	
 	if abs(axis1) > deadzone:
 		y += speed * axis1
-	
-	# control direction.
-	# calculate direction based on axis 3,4
-	
-	# point in right direction
-	
-			
-	# axis
-	#       movement
-	# 0: left, right
-	# 1: up, down
-	
-	#       aim
-	# 3: down, up
-	# 4: left, right
-	
-	screen.fill((0,0,0))
-	pygame.draw.rect(screen, color, 
-					 pygame.Rect(x, y, 60, 80))
-    
-	
-	pygame.display.flip()
-	
-	
+'''
 	
 	
 	
