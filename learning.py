@@ -26,10 +26,10 @@ class Gunner(object):
 		# create og gunner, then rotate and animate a copy of the og each frame
 		self.original_gunner = GUNNER.subsurface((0,0,150,150)) # GUNNER will be a png with sprite assets. 
 		self.gunner = self.original_gunner.copy()
-		self.original_feet = GUNNER.subsurface((0,0,10,10))
+		self.original_feet = GUNNER.subsurface((300,0,150,150))
 		self.feet = self.original_feet.copy()
 		self.gunner_rect = self.gunner.get_rect(center=location)
-		self.feet_rect = self.rect.copy()
+		self.feet_rect = self.gunner_rect.copy()
 		self.gunner_angle=0
 		self.feet_angle=0
 		
@@ -59,7 +59,7 @@ class Gunner(object):
 		'''catch and process gamepad events.'''
 		if event.type == pygame.JOYBUTTONDOWN:
 			if event.joy == self.id and event.button == 0:	# FIXME set fire button 
-				objects.add(Bullet(self.rect.center, self.angle))
+				objects.add(Bullet(self.gunner_rect.center, self.gunner_angle))
 			elif event.type == pygame.JOYAXISMOTION:
 				if event.joy == self.id:
 					if event.joy.get_axis() in (0,1): # FIXME this probably wont work
@@ -80,9 +80,9 @@ class Bullet(pygame.sprite.Sprite):
 		These are passed in by the gunner class when the projectile is created
 		'''
 		pygame.sprite.Sprite.__init__(self)
-		self.original_bullet = GUNNER.subsurface((0,0,10,10)) # FIXME bullet from sprite image
+		self.original_bullet = GUNNER.subsurface((150,0,150,150)) # FIXME bullet from sprite image
 		self.angle = angle # FIXME, may have to change this
-		self.image = pygame.transform.rotate(self.original_laser, angle)
+		self.image = pygame.transform.rotate(self.original_bullet, angle)
 		self.rect = self.image.get_rect(center=location)
 		self.pos = [self.rect.x, self.rect.y] # what does this do???
 		self.speed = 9
@@ -98,7 +98,7 @@ class Bullet(pygame.sprite.Sprite):
 		
 	def remove(self, screen_rect):
 		'''remove the bullet if it has left the screen'''
-		if not self.rect.colliderect(screen.rect):
+		if not self.rect.colliderect(screen_rect):
 			self.kill()
 	
 class Control(object):
@@ -112,8 +112,8 @@ class Control(object):
 		self.clock = pygame.time.Clock()
 		self.fps = 30
 		self.keys = pygame.key.get_pressed()
-		self.player = Gunner(self.joys[0], screen_rect.center)# FIXME May have to replace center with (x,y)
-		self.bullets = pg.sprite.Group()
+		self.player = Gunner(self.joys[0], self.screen_rect.center)# FIXME May have to replace center with (x,y)
+		self.bullets = pygame.sprite.Group()
 		
 	def event_loop(self):
 		''' events are passed to appropriate object'''
@@ -144,7 +144,7 @@ class Control(object):
 			self.event_loop()
 			self.update()
 			self.draw()
-			pygame.display_flip()
+			pygame.display.flip()
 			self.clock.tick(self.fps)
 			self.display_fps()
 			
