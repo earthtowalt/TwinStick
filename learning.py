@@ -22,18 +22,20 @@ class Gunner(object):
 		self.controller = controller 
 		self.id = controller.get_id()
 	
-		# setup location and angle
-		self.angle = 0
+		# setup location
 		self.location = location
 	
-		# setup gunner sprite. Has gunner and feet. top is gunner, bottom is feet.
-		# create og gunner, then rotate and animate a copy of the og each frame
-		self.original_gunner = GUNNER.subsurface((0,0,150,150)) # GUNNER will be a png with sprite assets. 
-		self.gunner = self.original_gunner.copy()
+		# initialize original_gunner and og_feet 
+		self.original_gunner = GUNNER.subsurface((0,0,150,150))
 		self.original_feet = GUNNER.subsurface((300,0,150,150))
+		
+		### should be replaced with call to position()
+		self.gunner = self.original_gunner.copy()
 		self.feet = self.original_feet.copy()
-		self.gunner_rect = self.gunner.get_rect(center=location)
-		self.feet_rect = self.feet.get_rect(center=location)
+		self.gunner_rect = self.gunner.get_rect(center=self.location)
+		self.feet_rect = self.feet.get_rect(center=self.location)
+		###
+		
 		self.gunner_angle=0
 		self.feet_angle=0
 		
@@ -59,7 +61,9 @@ class Gunner(object):
 			if abs(lefty) > deadzone:
 				y += speed * axis1 # move vert
 				self.gunner.transform.()
-				self.feet.transform()'''
+				self.feet.transform()
+			'''
+				
 			'''
 			movement control:
 			# control movement
@@ -74,14 +78,26 @@ class Gunner(object):
 		if abs(rightx) > deadzone or abs(righty) > deadzone:
 			if rightx == 0.0: rightx += 0.0001
 			self.gunner_angle = 45.0 -math.degrees(math.atan2(float(righty), float(rightx)))
+			# transform and locate..
 			self.gunner = pygame.transform.rotate(self.original_gunner, self.gunner_angle)
 			self.gunner_rect = self.gunner.get_rect(center=self.gunner_rect.center)
 			
 	def position(self):
+		# use:
 		# self.angle
 		# self.location
-		pass
-			
+		# both player and player_rect should be in right place with right orientation. 
+		
+		# create gunner and feet copy
+		self.gunner = pygame.transform.rotate(self.original_gunner, self.gunner_angle)
+		self.feet = pygame.transform.rotate(self.original_feet, self.feet_angle)
+		# rotate sprites to correct orientation.
+		self.gunner = pygame.transform.rotate(self.gunner, self.gunner_angle)
+		self.feet = pygame.transform.rotate(self.feet, self.feet_angle)
+		# position the sprites correctly
+		self.gunner_rect = self.gunner.get_rect(center=self.location)
+		self.feet_rect = self.feet.get_rect(center=self.location)
+		
 		
 	def get_event(self, event, objects):
 		'''catch and process gamepad events.'''
@@ -150,7 +166,7 @@ class Control(object):
 			self.player.get_event(event, self.bullets)
 			
 	def update(self):
-		''' update all bullets '''
+		''' update all bullets'''
 		self.bullets.update(self.screen_rect)
 		
 	def draw(self):
