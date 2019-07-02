@@ -17,13 +17,19 @@ class Gunner(object):
 	'''twin stick shooter'''
 	def __init__(self, controller, location):
 		'''location is (x,y) coord pair.'''
+		# set speed 
+		self.speed = 5
 		
 		# setup controller
 		self.controller = controller 
 		self.id = controller.get_id()
 	
 		# setup location
-		self.location = location
+		self.location = list(location)
+		
+		# setup angle 
+		self.gunner_angle=0
+		self.feet_angle=0
 	
 		# initialize original_gunner and og_feet 
 		self.original_gunner = GUNNER.subsurface((0,0,150,150))
@@ -36,10 +42,24 @@ class Gunner(object):
 		self.feet_rect = self.feet.get_rect(center=self.location)
 		###
 		
-		self.gunner_angle=0
-		self.feet_angle=0
+	def position(self):
+		# use:
+		# self.angle
+		# self.location
+		# both player and player_rect should be in right place with right orientation. 
 		
-	def set_angle(self, deadzone=0.1):
+		# create gunner and feet copy
+		self.gunner = pygame.transform.rotate(self.original_gunner, self.gunner_angle)
+		self.feet = pygame.transform.rotate(self.original_feet, self.feet_angle)
+		# rotate sprites to correct orientation.
+		self.gunner = pygame.transform.rotate(self.gunner, self.gunner_angle)
+		self.feet = pygame.transform.rotate(self.feet, self.feet_angle)
+		# position the sprites correctly
+		self.gunner_rect = self.gunner.get_rect(center=self.location)
+		self.feet_rect = self.feet.get_rect(center=self.location)
+		
+		
+	def handle_input(self, deadzone=0.1):
 		'''
 		get the current angle of the passed sticks 
 		and set the according sprites.
@@ -52,9 +72,12 @@ class Gunner(object):
 			# set the angle
 			if leftx == 0.0: leftx += 0.0001
 			self.feet_angle = 225.0 -math.degrees(math.atan2(float(lefty), float(leftx)))
-			self.feet = pygame.transform.rotate(self.original_feet, self.feet_angle)
-			self.feet_rect = self.feet.get_rect(center=self.feet_rect.center)
+			
+			#fixme self.feet = pygame.transform.rotate(self.original_feet, self.feet_angle)
+			#fixme self.feet_rect = self.feet.get_rect(center=self.feet_rect.center)
 			# move the feet and gunner
+			self.location[0] += self.speed * leftx
+			self.location[1] += self.speed * lefty 
 			'''
 			if abs(leftx) > deadzone:
 				x += speed * axis0 # move horiz
@@ -79,24 +102,11 @@ class Gunner(object):
 			if rightx == 0.0: rightx += 0.0001
 			self.gunner_angle = 45.0 -math.degrees(math.atan2(float(righty), float(rightx)))
 			# transform and locate..
-			self.gunner = pygame.transform.rotate(self.original_gunner, self.gunner_angle)
-			self.gunner_rect = self.gunner.get_rect(center=self.gunner_rect.center)
+			# fixme self.gunner = pygame.transform.rotate(self.original_gunner, self.gunner_angle)
+			# fixme self.gunner_rect = self.gunner.get_rect(center=self.gunner_rect.center)
+		self.position()
 			
-	def position(self):
-		# use:
-		# self.angle
-		# self.location
-		# both player and player_rect should be in right place with right orientation. 
-		
-		# create gunner and feet copy
-		self.gunner = pygame.transform.rotate(self.original_gunner, self.gunner_angle)
-		self.feet = pygame.transform.rotate(self.original_feet, self.feet_angle)
-		# rotate sprites to correct orientation.
-		self.gunner = pygame.transform.rotate(self.gunner, self.gunner_angle)
-		self.feet = pygame.transform.rotate(self.feet, self.feet_angle)
-		# position the sprites correctly
-		self.gunner_rect = self.gunner.get_rect(center=self.location)
-		self.feet_rect = self.feet.get_rect(center=self.location)
+	
 		
 		
 	def get_event(self, event, objects):
@@ -106,7 +116,7 @@ class Gunner(object):
 				objects.add(Bullet(self.gunner_rect.center, self.gunner_angle))
 		if event.type == pygame.JOYAXISMOTION:
 			if event.joy == self.id:
-				self.set_angle()
+				self.handle_input()
 	
 	def draw(self, surface):
 		'''draw gunner and feet to the target surface'''
