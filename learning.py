@@ -22,6 +22,10 @@ class Gunner(object):
 		self.controller = controller 
 		self.id = controller.get_id()
 	
+		# setup location and angle
+		self.angle = 0
+		self.location = location
+	
 		# setup gunner sprite. Has gunner and feet. top is gunner, bottom is feet.
 		# create og gunner, then rotate and animate a copy of the og each frame
 		self.original_gunner = GUNNER.subsurface((0,0,150,150)) # GUNNER will be a png with sprite assets. 
@@ -29,43 +33,64 @@ class Gunner(object):
 		self.original_feet = GUNNER.subsurface((300,0,150,150))
 		self.feet = self.original_feet.copy()
 		self.gunner_rect = self.gunner.get_rect(center=location)
-		self.feet_rect = self.gunner_rect.copy()
+		self.feet_rect = self.feet.get_rect(center=location)
 		self.gunner_angle=0
 		self.feet_angle=0
 		
-	def get_angle(self, stick, deadzone=0.1):
-		'''get the current angle of the passed stick and set the according sprites.'''
+	def set_angle(self, deadzone=0.1):
+		'''
+		get the current angle of the passed sticks 
+		and set the according sprites.
+		'''
 	
 		leftx,lefty = self.controller.get_axis(0), self.controller.get_axis(1)
 		rightx,righty = self.controller.get_axis(3), -self.controller.get_axis(4)
 		
 		if abs(leftx) > deadzone or abs(lefty) > deadzone:
-			if leftx == 0.0: x += 0.0001
-			# self.angle = arctan(y/x)
-			self.feet_angle += 5 #FIXME: actually get angle
+			# set the angle
+			if leftx == 0.0: leftx += 0.0001
+			self.feet_angle = 225.0 -math.degrees(math.atan2(float(lefty), float(leftx)))
 			self.feet = pygame.transform.rotate(self.original_feet, self.feet_angle)
 			self.feet_rect = self.feet.get_rect(center=self.feet_rect.center)
-		
+			# move the feet and gunner
+			'''
+			if abs(leftx) > deadzone:
+				x += speed * axis0 # move horiz
+			if abs(lefty) > deadzone:
+				y += speed * axis1 # move vert
+				self.gunner.transform.()
+				self.feet.transform()'''
+			'''
+			movement control:
+			# control movement
+				if abs(axis0) > deadzone:
+					x += speed * axis0
+				
+				if abs(axis1) > deadzone:
+					y += speed * axis1
+			'''
+				
+		# change the logic to just set the self.angle and self.x and self.y
 		if abs(rightx) > deadzone or abs(righty) > deadzone:
-			if rightx == 0.0: x += 0.0001
-			# self.gunner_angle = arctan(y/x)
-			self.gunner_angle += 5 # FIXME actually get angle 
+			if rightx == 0.0: rightx += 0.0001
+			self.gunner_angle = 45.0 -math.degrees(math.atan2(float(righty), float(rightx)))
 			self.gunner = pygame.transform.rotate(self.original_gunner, self.gunner_angle)
 			self.gunner_rect = self.gunner.get_rect(center=self.gunner_rect.center)
 			
+	def position(self):
+		# self.angle
+		# self.location
+		pass
 			
 		
 	def get_event(self, event, objects):
 		'''catch and process gamepad events.'''
 		if event.type == pygame.JOYBUTTONDOWN:
-			if event.joy == self.id and event.button == 0:	# FIXME set fire button 
+			if event.joy == self.id and event.button == 5:	# FIXME set fire button 
 				objects.add(Bullet(self.gunner_rect.center, self.gunner_angle))
-			elif event.type == pygame.JOYAXISMOTION:
-				if event.joy == self.id:
-					if event.joy.get_axis() in (0,1): # FIXME this probably wont work
-						self.get_angle('left')
-					elif event.joy.axis() in (3,4): 
-						self.get_angle('right')
+		if event.type == pygame.JOYAXISMOTION:
+			if event.joy == self.id:
+				self.set_angle()
 	
 	def draw(self, surface):
 		'''draw gunner and feet to the target surface'''
@@ -81,13 +106,14 @@ class Bullet(pygame.sprite.Sprite):
 		'''
 		pygame.sprite.Sprite.__init__(self)
 		self.original_bullet = GUNNER.subsurface((150,0,150,150)) # FIXME bullet from sprite image
-		self.angle = angle # FIXME, may have to change this
+		self.angle = -math.radians(angle-135)
 		self.image = pygame.transform.rotate(self.original_bullet, angle)
 		self.rect = self.image.get_rect(center=location)
-		self.pos = [self.rect.x, self.rect.y] # what does this do???
+		self.pos = [self.rect.x, self.rect.y]
 		self.speed = 9
 		self.velocity = (self.speed * math.cos(self.angle), self.speed * math.sin(self.angle))
 		self.done = False 
+		
 	
 	def update(self, screen_rect):
 		'''update the bullet each frame'''
@@ -161,11 +187,14 @@ def main():
 	'''prepare display, load sprite image, and start program'''
 	global GUNNER 
 	os.environ['SDL_VIDEO_CENTERED'] = '1'
+	# pygame window setup 
 	pygame.init()
 	pygame.display.set_caption(CAPTION)
 	pygame.display.set_mode(SCREEN_SIZE)
+	# load sprite images
 	GUNNER = pygame.image.load("gunner.png").convert()
 	GUNNER.set_colorkey(COLOR_KEY)
+	
 	Control().main_loop()
 	pygame.quit()
 	sys.exit()
@@ -173,15 +202,7 @@ def main():
 if __name__ == '__main__':
 	main()
 	
-'''
-movement control:
-# control movement
-	if abs(axis0) > deadzone:
-		x += speed * axis0
-	
-	if abs(axis1) > deadzone:
-		y += speed * axis1
-'''
+
 	
 	
 	
