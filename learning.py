@@ -11,14 +11,16 @@ CAPTION = "TWIN STICK"
 SCREEN_SIZE = (800, 600)
 BACKGROUND_COLOR = (50,50,50)
 COLOR_KEY = (255, 0, 255) 
+GUNNER_WIDTH,GUNNER_HEIGHT = 150,150
+FEET_WIDTH,FEET_HEIGHT = 150,150
 
 # character class
 class Gunner(object):
 	'''twin stick shooter'''
 	def __init__(self, controller, location):
 		'''location is (x,y) coord pair.'''
-		# set speed 
-		self.speed = 5
+		# gunner speed 
+		self.speed = 7
 		
 		# setup controller
 		self.controller = controller 
@@ -32,22 +34,15 @@ class Gunner(object):
 		self.feet_angle=0
 	
 		# initialize original_gunner and og_feet 
-		self.original_gunner = GUNNER.subsurface((0,0,150,150))
-		self.original_feet = GUNNER.subsurface((300,0,150,150))
+		self.original_gunner = GUNNER.subsurface((0,0,GUNNER_WIDTH,GUNNER_HEIGHT))
+		self.original_feet = GUNNER.subsurface((300,0,FEET_WIDTH,FEET_HEIGHT))
 		
-		### fixme: label something
-		self.gunner = self.original_gunner.copy()
-		self.feet = self.original_feet.copy()
-		self.gunner_rect = self.gunner.get_rect(center=self.location)
-		self.feet_rect = self.feet.get_rect(center=self.location)
+		# render initial gunner
+		self.set_position()
 		
 		
 	def set_position(self):
-		# use:
-		# self.angle
-		# self.location
-		# both player and player_rect should be in right place with right orientation. 
-		
+		'''Move the gunner into place using angle and location'''
 		# create gunner and feet copy
 		self.gunner = pygame.transform.rotate(self.original_gunner, self.gunner_angle)
 		self.feet = pygame.transform.rotate(self.original_feet, self.feet_angle)
@@ -77,9 +72,19 @@ class Gunner(object):
 			# set the angle
 			if leftx == 0.0: leftx += 0.0001
 			self.feet_angle = 225.0 -math.degrees(math.atan2(float(lefty), float(leftx)))
-			# mooove
+			# move 
 			self.location[0] += self.speed * leftx
 			self.location[1] += self.speed * lefty 
+			# constrain left and right
+			if self.location[0] > SCREEN_SIZE[0]-(GUNNER_WIDTH/2):
+				self.location[0] = SCREEN_SIZE[0]-(GUNNER_WIDTH/2)
+			elif self.location[0] < (GUNNER_WIDTH/2):
+				self.location[0] = (GUNNER_WIDTH/2)
+			# constrain top and bottom
+			if self.location[1] > SCREEN_SIZE[1]-(GUNNER_HEIGHT/2):
+				self.location[1] = SCREEN_SIZE[1]-(GUNNER_HEIGHT/2)
+			elif self.location[1] < (GUNNER_HEIGHT/2):
+				self.location[1] = (GUNNER_HEIGHT/2)
 		
 		
 	def get_event(self, event, objects):
@@ -115,7 +120,7 @@ class Bullet(pygame.sprite.Sprite):
 		self.image = pygame.transform.rotate(self.original_bullet, angle)
 		self.rect = self.image.get_rect(center=location)
 		self.pos = [self.rect.x, self.rect.y]
-		self.speed = 9
+		self.speed = 13
 		self.velocity = (self.speed * math.cos(self.angle), self.speed * math.sin(self.angle))
 		self.done = False 
 		
