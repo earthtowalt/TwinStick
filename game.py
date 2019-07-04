@@ -1,5 +1,5 @@
-#
-# COle Test
+# Twin Stick shooter zombie game 
+# 
 # most of the code for the gunner class was modeled after the tank from this git:
 # https://github.com/Mekire/pygame-samples/blob/master/tank_turret/turret_gamepad.py
 
@@ -17,7 +17,7 @@ FEET_WIDTH,FEET_HEIGHT = 150,150
 
 # character class
 class Gunner(object):
-	'''twin stick shooter'''
+	'''the character who moves around screen. comprised of a top and bottom half of sprites.'''
 	def __init__(self, controller, location):
 		'''location is (x,y) coord pair.'''
 		# gunner speed 
@@ -44,12 +44,9 @@ class Gunner(object):
 		
 	def set_position(self):
 		'''Move the gunner into place using angle and location'''
-		# create gunner and feet copy
+		# create gunner and feet copy with correct rotation.
 		self.gunner = pygame.transform.rotate(self.original_gunner, self.gunner_angle)
 		self.feet = pygame.transform.rotate(self.original_feet, self.feet_angle)
-		# rotate sprites to correct orientation.
-		#self.gunner = pygame.transform.rotate(self.gunner, self.gunner_angle)
-		#self.feet = pygame.transform.rotate(self.feet, self.feet_angle)
 		# position the sprites correctly
 		self.gunner_rect = self.gunner.get_rect(center=self.location)
 		self.feet_rect = self.feet.get_rect(center=self.location)
@@ -61,19 +58,16 @@ class Gunner(object):
 		if abs(rightx) > deadzone or abs(righty) > deadzone:
 			if rightx == 0.0: rightx += 0.0001
 			self.gunner_angle = 45.0 -math.degrees(math.atan2(float(righty), float(rightx)))
-			# transform and locate..
-			# fixme self.gunner = pygame.transform.rotate(self.original_gunner, self.gunner_angle)
-			# fixme self.gunner_rect = self.gunner.get_rect(center=self.gunner_rect.center)
 		
 			
-	def move(self, deadzone=0.1):
+	def update_location(self, deadzone=0.1):
 		'''caclulate location and feet_angle'''
 		leftx,lefty = self.controller.get_axis(0), self.controller.get_axis(1)
 		if abs(leftx) > deadzone or abs(lefty) > deadzone:
-			# set the angle
+			# set the feet angle
 			if leftx == 0.0: leftx += 0.0001
 			self.feet_angle = 225.0 -math.degrees(math.atan2(float(lefty), float(leftx)))
-			# move 
+			# set the new location
 			self.location[0] += self.speed * leftx
 			self.location[1] += self.speed * lefty 
 			# constrain left and right
@@ -90,9 +84,11 @@ class Gunner(object):
 		
 	def get_event(self, event, objects):
 		'''catch and process gamepad events.'''
+		# fire
 		if event.type == pygame.JOYBUTTONDOWN:
 			if event.joy == self.id and event.button == 5:	# FIXME set fire button 
 				objects.add(Bullet(self.gunner_rect.center, self.gunner_angle))
+		# aim right stick
 		if event.type == pygame.JOYAXISMOTION:
 			if event.joy == self.id:
 				self.aim()
@@ -101,10 +97,6 @@ class Gunner(object):
 	
 	def draw(self, surface):
 		'''draw gunner and feet to the target surface'''
-		# always move even if no event. 
-		self.move()
-		# then set the position
-		self.set_position()
 		surface.blit(self.feet, self.feet_rect)
 		surface.blit(self.gunner, self.gunner_rect)
 
@@ -124,7 +116,6 @@ class Bullet(pygame.sprite.Sprite):
 		self.speed = 13
 		self.velocity = (self.speed * math.cos(self.angle), self.speed * math.sin(self.angle))
 		self.done = False 
-		
 	
 	def update(self, screen_rect):
 		'''update the bullet each frame'''
@@ -161,9 +152,10 @@ class Control(object):
 			self.player.get_event(event, self.bullets)
 			
 	def update(self):
-		''' update all bullets'''
+		''' update all bullets, and the player motion'''
+		self.player.update_location()
+		self.player.set_position()
 		self.bullets.update(self.screen_rect)
-		# handle the movement. of left stick.
 		
 	def draw(self):
 		'''draw all elements to the display surface'''
