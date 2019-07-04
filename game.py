@@ -7,6 +7,7 @@ import pygame
 import os
 import math
 import sys
+import random
 
 CAPTION = "TWIN STICK" 
 SCREEN_SIZE = (800, 600)
@@ -142,6 +143,7 @@ class Control(object):
 		self.keys = pygame.key.get_pressed()
 		self.player = Gunner(self.joys[0], self.screen_rect.center)# FIXME May have to replace center with (x,y)
 		self.bullets = pygame.sprite.Group()
+		self.zombies = pygame.sprite.Group()
 		
 	def event_loop(self):
 		''' events are passed to appropriate object'''
@@ -177,6 +179,23 @@ class Control(object):
 			pygame.display.flip()
 			self.clock.tick(self.fps)
 			self.display_fps()
+			
+			
+class Zombie(object):
+	'''a class for the zombie sprites.'''
+	def __init__(self):
+		pygame.sprite.Sprite.__init__(self)
+		self.starting_location = get_spawn_location()
+		
+
+def get_spawn_location():
+	boundary = 20
+	x_range = random.randint(0, SCREEN_SIZE[0])
+	y_range = random.randint(0, SCREEN_SIZE[1])
+	# Top, Right, Bottom, Left
+	coord_pairs = [(x_range, -boundary), (SCREEN_SIZE[0] + boundary, y_range), (x_range, SCREEN_SIZE[1] + boundary), (-boundary, y_range)]
+	return coord_pairs[random.randint(0, 3)]
+	
 			
 def initialize_all_gamepads():
 	'''checks for gamepads and returns an intialized list of them if found'''
