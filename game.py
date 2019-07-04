@@ -20,25 +20,20 @@ class Gunner(object):
 	'''the character who moves around screen. comprised of a top and bottom half of sprites.'''
 	def __init__(self, controller, location):
 		'''location is (x,y) coord pair.'''
-		# gunner speed 
-		self.speed = 7
-		
+		# gunner and bullet speed 
+		self.speed = 8
+		self.bullet_speed = 14
 		# setup controller
 		self.controller = controller 
 		self.id = controller.get_id()
-	
-		# setup location
+		# setup location and angle variables
 		self.location = list(location)
-		
-		# setup angle 
 		self.gunner_angle=0
 		self.feet_angle=0
-	
 		# initialize original_gunner and og_feet 
 		self.original_gunner = SPRITE_SHEET.subsurface((0,0,GUNNER_WIDTH,GUNNER_HEIGHT))
 		self.original_feet = SPRITE_SHEET.subsurface((300,0,FEET_WIDTH,FEET_HEIGHT))
-		
-		# render initial gunner
+		# render initial gunner 
 		self.set_position()
 		
 		
@@ -80,20 +75,17 @@ class Gunner(object):
 				self.location[1] = SCREEN_SIZE[1]-(GUNNER_HEIGHT/2)
 			elif self.location[1] < (GUNNER_HEIGHT/2):
 				self.location[1] = (GUNNER_HEIGHT/2)
-		
-		
+				
 	def get_event(self, event, objects):
 		'''catch and process gamepad events.'''
 		# fire
 		if event.type == pygame.JOYBUTTONDOWN:
 			if event.joy == self.id and event.button == 5:	# FIXME set fire button 
-				objects.add(Bullet(self.gunner_rect.center, self.gunner_angle))
+				objects.add(Bullet(self.gunner_rect.center, self.gunner_angle, self.bullet_speed))
 		# aim right stick
 		if event.type == pygame.JOYAXISMOTION:
 			if event.joy == self.id:
 				self.aim()
-		
-		
 	
 	def draw(self, surface):
 		'''draw gunner and feet to the target surface'''
@@ -102,7 +94,7 @@ class Gunner(object):
 
 class Bullet(pygame.sprite.Sprite):
 	'''a class for the bullet sprites.'''
-	def __init__(self, location, angle):
+	def __init__(self, location, angle, speed):
 		'''
 		takes in a coordinate pair and angle in degrees. 
 		These are passed in by the gunner class when the projectile is created
@@ -113,7 +105,7 @@ class Bullet(pygame.sprite.Sprite):
 		self.image = pygame.transform.rotate(self.original_bullet, angle)
 		self.rect = self.image.get_rect(center=location)
 		self.pos = [self.rect.x, self.rect.y]
-		self.speed = 13
+		self.speed = speed
 		self.velocity = (self.speed * math.cos(self.angle), self.speed * math.sin(self.angle))
 		self.done = False 
 	
@@ -152,7 +144,7 @@ class Control(object):
 			self.player.get_event(event, self.bullets)
 			
 	def update(self):
-		''' update all bullets, and the player motion'''
+		'''update all bullets, and the player motion'''
 		self.player.update_location()
 		self.player.set_position()
 		self.bullets.update(self.screen_rect)

@@ -11,3 +11,8 @@ eventually switch sprites and create animation
 decrease size of player sprites or make the screen scrolling.
 
 for testing, allow keyboard or controller input
+
+
+
+Changes to make it work without controller
+	
