@@ -1,0 +1,11 @@
+
+# player:
+# move in all directions and shoot
+# run into wall
+
+# game:
+# close python window
+
+# conroller:
+# disconnect controller mid-game 
+# start game with no controller attached.
