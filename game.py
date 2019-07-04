@@ -4,10 +4,8 @@
 # https://github.com/Mekire/pygame-samples/blob/master/tank_turret/turret_gamepad.py
 
 import pygame
-import os
-import math
-import sys
-import random
+import os, sys
+import math, random, time
 
 CAPTION = "TWIN STICK" 
 SCREEN_SIZE = (800, 600)
@@ -34,6 +32,9 @@ class Gunner(object):
 		# initialize original_gunner and og_feet 
 		self.original_gunner = SPRITE_SHEET.subsurface((0,0,GUNNER_WIDTH,GUNNER_HEIGHT))
 		self.original_feet = SPRITE_SHEET.subsurface((300,0,FEET_WIDTH,FEET_HEIGHT))
+		# create firereate clock 
+		self.shot_delay = (1/4)
+		self.last_shot = time.time()
 		# render initial gunner 
 		self.set_position()
 		
@@ -48,13 +49,17 @@ class Gunner(object):
 		self.feet_rect = self.feet.get_rect(center=self.location)
 		
 		
-	def aim(self, deadzone=0.1):
+	def fire(self, objects, deadzone=0.1):
 		'''calculate gunner_angle'''
 		rightx,righty = self.controller.get_axis(3), -self.controller.get_axis(4)
 		if abs(rightx) > deadzone or abs(righty) > deadzone:
 			if rightx == 0.0: rightx += 0.0001
 			self.gunner_angle = 45.0 -math.degrees(math.atan2(float(righty), float(rightx)))
-		
+			# if fire_limit:
+			current_time = time.time()
+			if current_time - self.last_shot > self.shot_delay:
+				objects.add(Bullet(self.gunner_rect.center, self.gunner_angle, self.bullet_speed))
+				self.last_shot = current_time
 			
 	def update_location(self, deadzone=0.1):
 		'''caclulate location and feet_angle'''
@@ -77,16 +82,15 @@ class Gunner(object):
 			elif self.location[1] < (GUNNER_HEIGHT/2):
 				self.location[1] = (GUNNER_HEIGHT/2)
 				
-	def get_event(self, event, objects):
+	def get_event(self, event):
 		'''catch and process gamepad events.'''
+		'''
 		# fire
 		if event.type == pygame.JOYBUTTONDOWN:
 			if event.joy == self.id and event.button == 5:	# FIXME set fire button 
 				objects.add(Bullet(self.gunner_rect.center, self.gunner_angle, self.bullet_speed))
-		# aim right stick
-		if event.type == pygame.JOYAXISMOTION:
-			if event.joy == self.id:
-				self.aim()
+		'''
+		pass
 	
 	def draw(self, surface):
 		'''draw gunner and feet to the target surface'''
@@ -126,14 +130,20 @@ class Control(object):
 	'''main control class'''
 	def __init__(self):
 		'''create a gunner and create a group for bullets '''
+		#init screen 
 		self.screen = pygame.display.get_surface()
 		self.screen_rect = self.screen.get_rect()
-		self.joys = initialize_all_gamepads()
+		# game fps and loop condiiton
 		self.done = False
 		self.clock = pygame.time.Clock()
 		self.fps = 30
 		self.keys = pygame.key.get_pressed()
-		self.player = Gunner(self.joys[0], self.screen_rect.center)# FIXME May have to replace center with (x,y)
+		# setup joystick, if no joysticks found, initializes player with joy=None 
+		self.joys = initialize_all_gamepads()
+		if len(self.joys) == 0: joy = None 
+		else: joy = self.joys[0]
+		self.player = Gunner(joy, self.screen_rect.center)
+		# sprite groups
 		self.bullets = pygame.sprite.Group()
 		self.zombies = pygame.sprite.Group()
 		
@@ -143,11 +153,12 @@ class Control(object):
 			self.keys = pygame.key.get_pressed()
 			if event.type == pygame.QUIT or self.keys[pygame.K_ESCAPE]:
 				self.done = True 
-			self.player.get_event(event, self.bullets)
+			self.player.get_event(event) #FIXME CHECK THIS
 			
 	def update(self):
 		'''update all bullets, and the player motion'''
 		self.player.update_location()
+		self.player.fire(self.bullets)
 		self.player.set_position()
 		self.bullets.update(self.screen_rect)
 		

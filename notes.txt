@@ -14,5 +14,11 @@ for testing, allow keyboard or controller input
 
 
 
-Changes to make it work without controller
+Make changes to make it work without controller
+	check player.get_event()
+	player.update_location
+	player.set_position
+	player.__init__
 	
+	event_loop assigns self.keys
+	which stores all the keys set
