@@ -34,8 +34,8 @@ class Gunner(object):
 		self.feet_angle=0
 	
 		# initialize original_gunner and og_feet 
-		self.original_gunner = GUNNER.subsurface((0,0,GUNNER_WIDTH,GUNNER_HEIGHT))
-		self.original_feet = GUNNER.subsurface((300,0,FEET_WIDTH,FEET_HEIGHT))
+		self.original_gunner = SPRITE_SHEET.subsurface((0,0,GUNNER_WIDTH,GUNNER_HEIGHT))
+		self.original_feet = SPRITE_SHEET.subsurface((300,0,FEET_WIDTH,FEET_HEIGHT))
 		
 		# render initial gunner
 		self.set_position()
@@ -115,7 +115,7 @@ class Bullet(pygame.sprite.Sprite):
 		These are passed in by the gunner class when the projectile is created
 		'''
 		pygame.sprite.Sprite.__init__(self)
-		self.original_bullet = GUNNER.subsurface((150,0,150,150)) # FIXME bullet from sprite image
+		self.original_bullet = SPRITE_SHEET.subsurface((150,0,150,150)) # FIXME bullet from sprite image
 		self.angle = -math.radians(angle-135)
 		self.image = pygame.transform.rotate(self.original_bullet, angle)
 		self.rect = self.image.get_rect(center=location)
@@ -196,15 +196,15 @@ def initialize_all_gamepads():
 	
 def main():
 	'''prepare display, load sprite image, and start program'''
-	global GUNNER 
+	global SPRITE_SHEET 
 	os.environ['SDL_VIDEO_CENTERED'] = '1'
 	# pygame window setup 
 	pygame.init()
 	pygame.display.set_caption(CAPTION)
 	pygame.display.set_mode(SCREEN_SIZE)
 	# load sprite images
-	GUNNER = pygame.image.load("gunner.png").convert()
-	GUNNER.set_colorkey(COLOR_KEY)
+	SPRITE_SHEET = pygame.image.load("sprite_sheet.png").convert()
+	SPRITE_SHEET.set_colorkey(COLOR_KEY)
 	
 	Control().main_loop()
 	pygame.quit()

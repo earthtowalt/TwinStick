@@ -3,3 +3,10 @@ make simple twin stick controls(move and shoot)
 
 use groups to store enemies that appear from offscreen, and move towards player's position
 use sprites for enemies (pygame.sprite.Group)and player
+
+make the user fire while button is pressed 
+don't let the player move offscreen.
+
+eventually switch sprites and create animation
+
+decrease size of player sprites or make the screen scrolling.
