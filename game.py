@@ -184,20 +184,43 @@ class Control(object):
 			self.display_fps()
 			
 			
-class Zombie(object):
+class Zombie(pygame.sprite.Sprite):
 	'''a class for the zombie sprites.'''
 	def __init__(self):
 		pygame.sprite.Sprite.__init__(self)
-		self.starting_location = get_spawn_location()
+		self.original_zombie = ZOMBIE_SPRITE.subsurface(()) # figure out
+		self.angle = 0 # get angle
+		self.image = 
+		self.location = [self.rect.x, self.rect.y]
+		self.speed = 5
+		self.done = False 
+	
+	def update(self, player):
+		self.zombie = pygame.transform.rotate(self.original_zombie, self.angle)
+		self.zombie_rect = self.zombie.get_rect(center=self.location)
 		
+	'''
+	pygame.sprite.Sprite.__init__(self)
+		self.original_bullet = SPRITE_SHEET.subsurface((150,0,150,150)) # FIXME bullet from sprite image
+		self.angle = -math.radians(angle-135)
+		self.image = pygame.transform.rotate(self.original_bullet, angle)
+		self.rect = self.image.get_rect(center=location)
+		self.pos = [self.rect.x, self.rect.y]
+		self.speed = speed
+		self.velocity = (self.speed * math.cos(self.angle), self.speed * math.sin(self.angle))
+		self.done = False 
+	'''
 
-def get_spawn_location():
+
+
+def get_spawn_location(): # fixme optimize
 	boundary = 20
+	
 	x_range = random.randint(0, SCREEN_SIZE[0])
 	y_range = random.randint(0, SCREEN_SIZE[1])
 	# Top, Right, Bottom, Left
 	coord_pairs = [(x_range, -boundary), (SCREEN_SIZE[0] + boundary, y_range), (x_range, SCREEN_SIZE[1] + boundary), (-boundary, y_range)]
-	return coord_pairs[random.randint(0, 3)]
+	return list(coord_pairs[random.randint(0, 3)])
 	
 			
 def initialize_all_gamepads():
@@ -220,6 +243,8 @@ def main():
 	# load sprite images
 	SPRITE_SHEET = pygame.image.load("sprite_sheet.png").convert()
 	SPRITE_SHEET.set_colorkey(COLOR_KEY)
+	ZOMBIE_SPRITE = pygame.image.load('assets/zombiebasic.png').convert()
+	
 	
 	Control().main_loop()
 	pygame.quit()

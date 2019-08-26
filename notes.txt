@@ -21,4 +21,4 @@ Make changes to make it work without controller
 	player.__init__
 	
 	event_loop assigns self.keys
-	which stores all the keys set
+	which stores all the keys sethello
