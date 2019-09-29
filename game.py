@@ -190,7 +190,7 @@ class Zombie(pygame.sprite.Sprite):
 		pygame.sprite.Sprite.__init__(self)
 		self.original_zombie = ZOMBIE_SPRITE.subsurface(()) # figure out
 		self.angle = 0 # get angle
-		self.image = 
+		#self.image = 
 		self.location = [self.rect.x, self.rect.y]
 		self.speed = 5
 		self.done = False 
@@ -241,9 +241,10 @@ def main():
 	pygame.display.set_caption(CAPTION)
 	pygame.display.set_mode(SCREEN_SIZE)
 	# load sprite images
-	SPRITE_SHEET = pygame.image.load("sprite_sheet.png").convert()
+	dir_path = os.path.dirname(os.path.realpath(__file__))
+	SPRITE_SHEET = pygame.image.load(dir_path + '\\sprite_sheet.png').convert()
 	SPRITE_SHEET.set_colorkey(COLOR_KEY)
-	ZOMBIE_SPRITE = pygame.image.load('assets/zombiebasic.png').convert()
+	ZOMBIE_SPRITE = pygame.image.load(dir_path + '\\assets\\zombiebasic.png').convert()
 	
 	
 	Control().main_loop()
